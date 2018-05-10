@@ -59,13 +59,36 @@ class SearchView(View):
                 # key_words高亮
                 # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-highlighting.html
                 "highlight": {
+                    # 设置高亮格式
+                    "pre_tags": ['<span class="keyWord">'],
+                    "post_tags": ['</span>'],
                     "fields": {
-                        # 设置高亮格式
-                        "pre_tags": ['<span class="keyWord">'],
-                        "post_tags": ['</span>'],
                         "content": {},
                         "title": {}
                     }
                 }
             }
         )
+
+        total_nums = response['hits']['total']
+        hit_list = []
+        for hit in response['hits']['hits']:
+            hit_dict = {}
+            if 'title' in hit["highlight"]:
+                hit_dict["title"] = hit['highlight']['title']
+            else:
+                hit_dict["title"] = hit['_source']['title']
+            if 'content' in hit["highlight"]:
+                hit_dict['content'] = hit['highlight']['content'][:500]
+            else:
+                hit_dict["content"] = hit['_source']['content'][:500]
+
+            hit_dict['create_date'] = hit['_source']["create_date"]
+            hit_dict['url'] = hit['_source']['url']
+            hit_dict['score'] = hit['_source']
+
+            hit_list.append(hit_dict)
+
+            data = {"all_hits": hit_list, "key_words": key_words}
+            # 返回一个渲染后的httpresponse给前端
+            return render(request, "result.html", data)
