@@ -4,6 +4,7 @@ from django.views.generic.base import View
 # 用于把数据返回给前端
 from django.http import HttpResponse
 from search.models import LagouType, JobboleType
+from datetime import datetime
 from elasticsearch import Elasticsearch
 
 client = Elasticsearch(hosts=["127.0.0.1"])
@@ -43,6 +44,16 @@ class SearchView(View):
 
     def get(self, request):
         key_words = request.GET.get("q", "")
+        # 判断请求的是第几页数据
+        page = request.GET.get("p", "1")
+        try:
+            page = int(page)
+        except:
+            page = 1
+
+        # 计时
+        start_time = datetime.now()
+
         # 多字段查询
         response = client.search(
             index="jobbole",
@@ -54,7 +65,7 @@ class SearchView(View):
                     }
                 },
                 # 用于做分页
-                "from": 0,
+                "from": (page - 1) * 10,
                 "size": 10,
                 # key_words高亮
                 # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-highlighting.html
@@ -70,7 +81,15 @@ class SearchView(View):
             }
         )
 
+        end_time = datetime.now()
+        last_seconds = (end_time - start_time).total_seconds()
+
         total_nums = response['hits']['total']
+        if (page % 10) > 0:
+            page_nums = int(total_nums / 10) + 1
+        else:
+            page_nums = int(total_nums / 10)
+
         hit_list = []
         for hit in response['hits']['hits']:
             hit_dict = {}
@@ -89,6 +108,10 @@ class SearchView(View):
 
             hit_list.append(hit_dict)
 
-        data = {"all_hits": hit_list, "key_words": key_words}
         # 返回一个渲染后的httpresponse给前端
-        return render(request, "result.html", {"all_hits": hit_list, "key_words": key_words, "total_nums": total_nums})
+        return render(request, "result.html", {"all_hits": hit_list,
+                                               "key_words": key_words,
+                                               "total_nums": total_nums,
+                                               "page": page,
+                                               "page_nums": page_nums,
+                                               "last_seconds": last_seconds})
