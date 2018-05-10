@@ -1,11 +1,12 @@
 import json
 from django.shortcuts import render
 from django.views.generic.base import View
-
 # 用于把数据返回给前端
 from django.http import HttpResponse
+from search.models import LagouType, JobboleType
+from elasticsearch import Elasticsearch
 
-from search.models import LagouType,JobboleType
+client = Elasticsearch(hosts=["127.0.0.1"])
 
 
 # Create your views here.
@@ -36,6 +37,35 @@ class SearchSuggest(View):
 
 
 class SearchView(View):
-    def get(self, request):
+    """
+    完成自动搜索功能
+    """
 
-        pass
+    def get(self, request):
+        key_words = request.GET.get("q", "")
+        # 多字段查询
+        response = client.search(
+            index="jobbole",
+            body={
+                "query": {
+                    "multi_match": {
+                        "query": key_words,
+                        "fields": ["title", "tags", "content"]
+                    }
+                },
+                # 用于做分页
+                "from": 0,
+                "size": 10,
+                # key_words高亮
+                # https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-highlighting.html
+                "highlight": {
+                    "fields": {
+                        # 设置高亮格式
+                        "pre_tags": ['<span class="keyWord">'],
+                        "post_tags": ['</span>'],
+                        "content": {},
+                        "title": {}
+                    }
+                }
+            }
+        )
