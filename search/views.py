@@ -75,20 +75,20 @@ class SearchView(View):
         for hit in response['hits']['hits']:
             hit_dict = {}
             if 'title' in hit["highlight"]:
-                hit_dict["title"] = hit['highlight']['title']
+                hit_dict["title"] = "".join(hit['highlight']['title'])
             else:
                 hit_dict["title"] = hit['_source']['title']
             if 'content' in hit["highlight"]:
-                hit_dict['content'] = hit['highlight']['content'][:500]
+                hit_dict['content'] = "".join(hit['highlight']['content'][:500])
             else:
                 hit_dict["content"] = hit['_source']['content'][:500]
 
             hit_dict['create_date'] = hit['_source']["create_date"]
             hit_dict['url'] = hit['_source']['url']
-            hit_dict['score'] = hit['_source']
+            hit_dict['score'] = hit['_score']
 
             hit_list.append(hit_dict)
 
-            data = {"all_hits": hit_list, "key_words": key_words}
-            # 返回一个渲染后的httpresponse给前端
-            return render(request, "result.html", data)
+        data = {"all_hits": hit_list, "key_words": key_words}
+        # 返回一个渲染后的httpresponse给前端
+        return render(request, "result.html", {"all_hits": hit_list, "key_words": key_words, "total_nums": total_nums})
