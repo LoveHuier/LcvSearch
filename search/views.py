@@ -5,16 +5,20 @@ from django.views.generic.base import View
 # 用于把数据返回给前端
 from django.http import HttpResponse
 
-from search.models import LagouType
+from search.models import LagouType,JobboleType
 
 
 # Create your views here.
 class SearchSuggest(View):
+    """
+    搜索补全功能
+    """
+
     def get(self, request):
         key_words = request.GET.get('s', '')
         re_datas = []
         if key_words:
-            s = LagouType.search()  # 实例化elasticsearch(搜索引擎)类的search查询
+            s = JobboleType.search()  # 实例化elasticsearch(搜索引擎)类的search查询
             s = s.suggest("my_suggest", key_words, completion={
                 "field": "suggest",
                 "fuzzy": {
@@ -28,10 +32,10 @@ class SearchSuggest(View):
                 source = match._source
                 re_datas.append(source["title"])
 
-        return HttpResponse(json.dumps(re_datas),content_type="application/json")
+        return HttpResponse(json.dumps(re_datas), content_type="application/json")
 
-    # for match in suggestions.my_suggest[0].options:
 
-# source = match._source
-#     re_datas.append(source['title'])
-#     print(source['company_name'])
+class SearchView(View):
+    def get(self, request):
+
+        pass

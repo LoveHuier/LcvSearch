@@ -22,5 +22,7 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
     # 此处设置为首页，以前写法是'^$',新版本不再使用^、$，只需要‘’就可以
     path("", TemplateView.as_view(template_name="index.html"), name='index'),
-    path("suggest/", SearchSuggest.as_view(), name='suggest')
+
+    path("suggest/", SearchSuggest.as_view(), name='suggest'),
+    path("search/", SearchSuggest.as_view(), name='suggest')
 ]
