@@ -13,6 +13,17 @@ client = Elasticsearch(hosts=["127.0.0.1"])
 redis_cli = redis.StrictRedis(host="127.0.0.1")
 
 
+class IndexView(View):
+    """
+    要在网页中加逻辑，必须重写View，不能使用django默认提供的TemplateView
+    """
+
+    def get(self, request):
+        # 逆序排列所有成员,并取出前5位
+        topn_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
+        return render(request, "index.html", {"topn_search": topn_search})
+
+
 # Create your views here.
 class SearchSuggest(View):
     """
@@ -47,6 +58,13 @@ class SearchView(View):
 
     def get(self, request):
         key_words = request.GET.get("q", "")
+
+        # 效率很高，因为它将数据保存到内存当中
+        redis_cli.zincrby("search_keywords_set", key_words)
+
+        # 逆序排列所有成员,并取出前5位
+        topn_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
+
         # 判断请求的是第几页数据
         page = request.GET.get("p", "1")
         try:
@@ -120,4 +138,5 @@ class SearchView(View):
                                                "page": page,
                                                "page_nums": page_nums,
                                                "last_seconds": last_seconds,
-                                               "jobbole_count": jobbole_count})
+                                               "jobbole_count": jobbole_count,
+                                               "topn_search": topn_search})

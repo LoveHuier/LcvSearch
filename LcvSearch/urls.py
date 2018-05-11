@@ -16,12 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path  # 此处应用path，老板本使用的是url
 from django.views.generic import TemplateView
-from search.views import SearchSuggest,SearchView
+from search.views import SearchSuggest, SearchView, IndexView
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
     # 此处设置为首页，以前写法是'^$',新版本不再使用^、$，只需要‘’就可以
-    path("", TemplateView.as_view(template_name="index.html"), name='index'),
+    path("", IndexView.as_view(), name='index'),
 
     path("suggest/", SearchSuggest.as_view(), name='suggest'),
     path("search/", SearchView.as_view(), name='search')
