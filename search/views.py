@@ -21,6 +21,7 @@ class IndexView(View):
     def get(self, request):
         # 逆序排列所有成员,并取出前5位
         topn_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
+        topn_search = [w.decode('utf-8') for w in topn_search]
         return render(request, "index.html", {"topn_search": topn_search})
 
 
@@ -64,6 +65,7 @@ class SearchView(View):
 
         # 逆序排列所有成员,并取出前5位
         topn_search = redis_cli.zrevrangebyscore("search_keywords_set", "+inf", "-inf", start=0, num=5)
+        topn_search = [w.decode('utf-8') for w in topn_search]
 
         # 判断请求的是第几页数据
         page = request.GET.get("p", "1")
