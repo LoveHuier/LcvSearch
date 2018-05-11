@@ -1,4 +1,5 @@
 import json
+import redis
 from django.shortcuts import render
 from django.views.generic.base import View
 # 用于把数据返回给前端
@@ -8,6 +9,8 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 
 client = Elasticsearch(hosts=["127.0.0.1"])
+
+redis_cli = redis.StrictRedis(host="127.0.0.1")
 
 
 # Create your views here.
@@ -50,6 +53,8 @@ class SearchView(View):
             page = int(page)
         except:
             page = 1
+
+        jobbole_count = redis_cli.get("jobbole_count")
 
         # 计时
         start_time = datetime.now()
@@ -114,4 +119,5 @@ class SearchView(View):
                                                "total_nums": total_nums,
                                                "page": page,
                                                "page_nums": page_nums,
-                                               "last_seconds": last_seconds})
+                                               "last_seconds": last_seconds,
+                                               "jobbole_count": jobbole_count})
